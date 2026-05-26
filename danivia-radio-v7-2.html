@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DANIVIA RADIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500;1,700&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Space+Grotesk:wght@300;400;500;700&family=Archivo+Black&family=Bebas+Neue&family=VT323&family=Syne:wght@600;800&family=Marcellus&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  /* ===================================================================
+     DANIVIA RADIO v7 — 8 unique themes with unique players
+     =================================================================== */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html, body {
+    width: 100%;
+    margin: 0; padding: 0;
+    font-family: 'Inter Tight', sans-serif;
+    background: #000; color: #fff;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    min-height: 100vh;
+    padding-bottom: calc(70px + var(--safe-bottom));
+  }
+  body.on-player { padding-bottom: 0; }
+
+  .app {
+    width: 100%; min-height: 100vh;
+    transition: background 0.5s ease;
+  }
+
+  /* ===== TOP CONTROLS (theme + fullscreen) ===== */
+  .top-controls {
+    position: fixed;
+    top: calc(12px + var(--safe-top));
+    right: 12px;
+    z-index: 1000;
+    display: flex; gap: 8px;
+  }
+  .top-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: white; transition: 0.2s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .top-btn:active { transform: scale(0.92); }
+  .top-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+  .theme-panel {
+    position: fixed;
+    top: calc(64px + var(--safe-top)); right: 12px;
+    width: 300px; max-height: calc(100vh - 100px); overflow-y: auto;
+    background: rgba(15,15,20,0.94); backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 18px;
+    padding: 12px; z-index: 999; display: none;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6); color: white;
+  }
+  .theme-panel.open { display: block; animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from {opacity:0;transform:translateY(-10px);} to {opacity:1;transform:translateY(0);} }
+  .theme-panel h3 {
+    font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.5);
+    text-transform: uppercase; margin-bottom: 10px; padding: 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .theme-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; border-radius: 12px;
+    cursor: pointer; transition: 0.2s; color: white;
+  }
+  .theme-option:hover { background: rgba(255,255,255,0.08); }
+  .theme-option.active { background: rgba(255,255,255,0.12); }
+  .theme-swatch { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.15); }
+  .sw-neon     { background: linear-gradient(135deg, #00f0ff, #ff2bd6); }
+  .sw-premium  { background: linear-gradient(135deg, #d4af37, #b87333); }
+  .sw-vintage  { background: radial-gradient(circle at 30% 30%, #c89c5a, #5a3a22); }
+  .sw-brutal   { background: linear-gradient(135deg, #fff 50%, #ff3355 50%); }
+  .sw-auto     { background: radial-gradient(circle, #050a14 30%, #00d4ff); }
+  .sw-sunset   { background: linear-gradient(180deg, #1a0033, #ff006e 60%, #ffcc00); }
+  .sw-terminal { background: #001100; border: 1px solid #00ff41; box-shadow: inset 0 0 10px #00ff41; }
+  .sw-bauhaus  { background: conic-gradient(from 0deg, #d72638 25%, #f49d37 25% 50%, #4287f5 50% 75%, #f4f0e8 75%); }
+  .theme-meta { flex: 1; min-width: 0; }
+  .theme-name { font-size: 13px; font-weight: 600; }
+  .theme-sub  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  .error-banner {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #d44545; color: white;
+    padding: 10px 18px; border-radius: 12px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 24px rgba(212,69,69,0.4);
+    z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .error-banner.show { opacity: 1; }
+
+  /* ===== VIEWS ===== */
+  .view { display: block; width: 100%; padding-top: var(--safe-top); }
+  .view-list.hidden { display: none; }
+  .view-player { display: none; }
+  .view-player.active { display: block; min-height: 100vh; }
+
+  /* ===== LIST VIEW (shared base) ===== */
+  .list-header { padding: 14px 20px 8px; }
+  .list-brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .brand-logo svg { width: 22px; height: 22px; stroke-width: 2; fill: none; }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+
+  .list-search-wrap { padding: 0 20px 10px; }
+  .list-search {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+  }
+  .list-search svg { width: 16px; height: 16px; stroke-width: 2; fill: none; flex-shrink: 0; }
+  .list-search input {
+    background: none; border: none; outline: none;
+    color: inherit; font-family: inherit; font-size: 14px;
+    flex: 1; min-width: 0;
+  }
+
+  .list-categories-wrap { padding: 0 20px 10px; }
+  .list-categories {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding-bottom: 4px; scrollbar-width: none;
+  }
+  .list-categories::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap; cursor: pointer;
+    transition: 0.2s; background: transparent;
+    color: inherit;
+  }
+  .list-content { padding: 0 20px 16px; }
+
+  .section-title {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 4px 0 12px;
+  }
+  .section-title h2 { font-size: 14px; font-weight: 600; letter-spacing: 1px; }
+  .section-title .meta { font-size: 10px; opacity: 0.5; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+
+  .stations { display: flex; flex-direction: column; gap: 8px; }
+  .station {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px; border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer; transition: 0.2s;
+    background: rgba(255,255,255,0.04);
+  }
+  .station:active { transform: scale(0.98); }
+  .station-art {
+    width: 52px; height: 52px; border-radius: 10px; flex-shrink: 0;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px;
+    position: relative;
+  }
+  .station-art .logo-img { width: 100%; height: 100%; object-fit: contain; padding: 6px; background: rgba(255,255,255,0.05); }
+  .station-art .logo-initials { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .station-info { flex: 1; min-width: 0; }
+  .station-name {
+    font-weight: 600; font-size: 15px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .station-meta {
+    font-size: 11px; opacity: 0.7;
+    display: flex; gap: 6px; align-items: center; margin-top: 2px;
+  }
+  .station-meta .dot { width: 2px; height: 2px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+  .favorite-star { cursor: pointer; padding: 8px; opacity: 0.4; transition: 0.2s; flex-shrink: 0; }
+  .favorite-star.active { opacity: 1; }
+  .favorite-star svg { width: 18px; height: 18px; stroke-width: 2; }
+  .favorite-star:not(.active) svg { fill: none; }
+  .favorite-star.active svg { fill: currentColor; }
+
+  /* ===== TAB BAR ===== */
+  .tab-bar-wrap {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding-bottom: var(--safe-bottom);
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    z-index: 100;
+  }
+  .tab-bar {
+    height: 60px; display: flex; align-items: center; justify-content: space-around;
+    padding: 0 8px;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; padding: 6px; opacity: 0.5; transition: 0.2s;
+  }
+  .tab.active { opacity: 1; }
+  .tab svg { width: 20px; height: 20px; stroke-width: 1.8; fill: none; }
+  .tab span { font-size: 10px; font-weight: 500; }
+
+  .loading-state, .empty-state { text-align: center; padding: 40px 20px; opacity: 0.6; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: currentColor;
+    border-radius: 50%; margin: 0 auto 12px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-state p, .empty-state p { font-size: 12px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ===== PLAYER VIEWS — base ===== */
+  .player-header {
+    padding: 18px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .back-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: inherit;
+  }
+  .back-btn:active { transform: scale(0.92); }
+  .back-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+  .player-header-spacer { width: 44px; }
+
+  /* Visualizer bars (shared) */
+  .viz { display: flex; align-items: flex-end; gap: 3px; }
+  .viz .bar { width: 3px; }
+  .viz.playing .bar { animation: vizBeat 0.9s ease-in-out infinite; }
+  .viz .bar:nth-child(1){animation-delay:-.1s;height:40%}.viz .bar:nth-child(2){animation-delay:-.3s;height:70%}.viz .bar:nth-child(3){animation-delay:-.2s;height:90%}.viz .bar:nth-child(4){animation-delay:-.4s;height:60%}.viz .bar:nth-child(5){animation-delay:-.5s;height:85%}.viz .bar:nth-child(6){animation-delay:-.2s;height:50%}.viz .bar:nth-child(7){animation-delay:-.6s;height:80%}.viz .bar:nth-child(8){animation-delay:-.3s;height:65%}.viz .bar:nth-child(9){animation-delay:-.5s;height:95%}.viz .bar:nth-child(10){animation-delay:-.1s;height:55%}.viz .bar:nth-child(11){animation-delay:-.4s;height:75%}.viz .bar:nth-child(12){animation-delay:-.2s;height:45%}.viz .bar:nth-child(13){animation-delay:-.6s;height:70%}.viz .bar:nth-child(14){animation-delay:-.3s;height:85%}.viz .bar:nth-child(15){animation-delay:-.5s;height:55%}.viz .bar:nth-child(16){animation-delay:-.1s;height:65%}.viz .bar:nth-child(17){animation-delay:-.4s;height:75%}.viz .bar:nth-child(18){animation-delay:-.2s;height:90%}.viz .bar:nth-child(19){animation-delay:-.5s;height:60%}.viz .bar:nth-child(20){animation-delay:-.3s;height:70%}
+  @keyframes vizBeat { 0%,100% { transform: scaleY(0.3); opacity: 0.6; } 50% { transform: scaleY(1); opacity: 1; } }
+
+  /* Each player implementation hidden by default, shown only for its theme */
+  .player-impl { display: none; }
+  .theme-neon     .player-neon     { display: block; }
+  .theme-premium  .player-premium  { display: block; }
+  .theme-vintage  .player-vintage  { display: block; }
+  .theme-brutal   .player-brutal   { display: block; }
+  .theme-auto     .player-auto     { display: block; }
+  .theme-sunset   .player-sunset   { display: block; }
+  .theme-terminal .player-terminal { display: block; }
+  .theme-bauhaus  .player-bauhaus  { display: block; }
+
+  /* Live dot (shared) */
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff3355; box-shadow: 0 0 10px #ff3355;
+    animation: pulse 1.4s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
+
+  /* Logo holder for player covers — handled per theme */
+  .cover-holder .logo-img { width: 100%; height: 100%; object-fit: contain; padding: 12%; background: rgba(255,255,255,0.04); }
+  .cover-holder .logo-initials { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+  /* =================================================================
+     LIST THEMES (same as before, compact)
+     ================================================================= */
+
+  /* === T1 NEON LIST === */
+  .theme-neon { background: #03030a; color: #fff; }
+  .theme-neon::before { content: ""; position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(157,75,255,0.22), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(0,240,255,0.18), transparent 55%),
+      repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,240,255,0.03) 3px, rgba(0,240,255,0.03) 4px);
+    pointer-events: none;
+  }
+  .theme-neon .view { position: relative; z-index: 1; }
+  .theme-neon .brand-logo { background: linear-gradient(135deg,#00f0ff,#ff2bd6); clip-path: polygon(20% 0,100% 0,100% 80%,80% 100%,0 100%,0 20%); border-radius: 0; box-shadow: 0 0 20px rgba(0,240,255,0.5); }
+  .theme-neon .brand-logo svg { stroke: #000; }
+  .theme-neon .brand-text .name { font-family: 'Orbitron',sans-serif; font-weight: 900; font-size: 18px; letter-spacing: 2px; background: linear-gradient(90deg,#00f0ff,#ff2bd6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .theme-neon .brand-text .sub { font-size: 9px; letter-spacing: 4px; color: #525a82; text-transform: uppercase; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .theme-neon .list-search { background: rgba(18,22,50,0.5); border-color: rgba(0,240,255,0.3); border-radius: 0; clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); }
+  .theme-neon .section-title h2 { font-family: 'Orbitron',sans-serif; letter-spacing: 2px; font-size: 12px; }
+  .theme-neon .section-title h2::before { content: '// '; color: #00f0ff; }
+  .theme-neon .cat-pill { background: rgba(18,22,50,0.5); border-color: rgba(0,240,255,0.3); border-radius: 0; clip-path: polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%); font-family: 'Orbitron',sans-serif; letter-spacing: 1px; font-size: 11px; }
+  .theme-neon .cat-pill.active { background: linear-gradient(135deg, rgba(0,240,255,0.3), rgba(255,43,214,0.3)); border-color: #00f0ff; color: #00f0ff; box-shadow: 0 0 12px rgba(0,240,255,0.4); }
+  .theme-neon .station { background: rgba(18,22,50,0.6); border: 1px solid rgba(0,240,255,0.2); border-radius: 0; clip-path: polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); }
+  .theme-neon .station-art { background: linear-gradient(135deg,#00f0ff22,#ff2bd622); border: 1px solid rgba(0,240,255,0.4); color: #00f0ff; border-radius: 0; clip-path: polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px); font-family: 'Orbitron', sans-serif; }
+  .theme-neon .station-name { font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; font-size: 13px; }
+  .theme-neon .station-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8b94c0; }
+  .theme-neon .favorite-star.active { color: #ff2bd6; }
+  .theme-neon .tab-bar-wrap { background: rgba(7,7,26,0.85); border-color: rgba(0,240,255,0.2); }
+  .theme-neon .tab.active { color: #00f0ff; }
+
+  /* === T2 PREMIUM LIST === */
+  .theme-premium { background: #0a0908; color: #f5f1e8; }
+  .theme-premium::before { content: ""; position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 15% 0%, rgba(212,175,55,0.08), transparent 50%),
+                radial-gradient(ellipse at 85% 100%, rgba(184,115,51,0.06), transparent 55%);
+    pointer-events: none;
+  }
+  .theme-premium .view { position: relative; z-index: 1; }
+  .theme-premium .brand-logo { background: linear-gradient(135deg,#d4af37,#b87333); box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
+  .theme-premium .brand-logo svg { stroke: #0a0908; }
+  .theme-premium .brand-text .name { font-family: 'Cormorant Garamond',serif; font-weight: 700; font-size: 26px; }
+  .theme-premium .brand-text .name em { color: #d4af37; font-style: italic; }
+  .theme-premium .brand-text .sub { font-family: 'JetBrains Mono',monospace; font-size: 9px; letter-spacing: 3px; color: #9c9489; text-transform: uppercase; margin-top: 4px; }
+  .theme-premium .list-search { background: rgba(28,25,22,0.7); border-color: rgba(212,175,55,0.2); }
+  .theme-premium .section-title h2 { font-family: 'Cormorant Garamond',serif; font-size: 22px; font-weight: 500; font-style: italic; color: #d4af37; }
+  .theme-premium .cat-pill { color: #9c9489; font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 500; padding: 6px 18px; }
+  .theme-premium .cat-pill.active { background: #d4af37; color: #0a0908; border-color: #d4af37; }
+  .theme-premium .stations { counter-reset: c; }
+  .theme-premium .station { background: rgba(28,25,22,0.5); border: none; border-bottom: 1px solid rgba(212,175,55,0.15); border-radius: 0; padding: 16px 12px; counter-increment: c; }
+  .theme-premium .station::before { content: counter(c, decimal-leading-zero); font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; color: #d4af37; opacity: 0.5; margin-right: 12px; font-style: italic; min-width: 36px; }
+  .theme-premium .station-art { background: #1c1916; color: #d4af37; border-radius: 4px; font-family: 'Cormorant Garamond', serif; font-style: italic; }
+  .theme-premium .station-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; }
+  .theme-premium .station-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+  .theme-premium .station-meta > span:first-child { color: #d4af37; }
+  .theme-premium .favorite-star.active { color: #d4af37; }
+  .theme-premium .tab-bar-wrap { background: rgba(13,11,9,0.92); border-color: rgba(212,175,55,0.15); }
+  .theme-premium .tab.active { color: #d4af37; }
+
+  /* === T3 VINTAGE LIST === */
+  .theme-vintage { background: radial-gradient(ellipse at center,#3a2818,#1a0f08 70%); color: #f0e0c0; }
+  .theme-vintage::before { content: ""; position: fixed; inset: 0; z-index: 0; background-image: repeating-linear-gradient(90deg, transparent 0,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px); pointer-events: none; opacity: 0.7; }
+  .theme-vintage .view { position: relative; z-index: 1; }
+  .theme-vintage .brand-logo { background: radial-gradient(circle at 30% 30%,#c89c5a,#8b5a2b); box-shadow: inset 0 0 0 2px #5a3a22, 0 4px 8px rgba(0,0,0,0.5); border-radius: 50%; }
+  .theme-vintage .brand-logo svg { stroke: #2a1810; }
+  .theme-vintage .brand-text .name { font-family: 'Playfair Display',serif; font-style: italic; font-weight: 700; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .theme-vintage .brand-text .sub { font-family: 'Cormorant Garamond',serif; font-style: italic; font-size: 11px; color: #c89c5a; margin-top: 2px; }
+  .theme-vintage .list-search { background: linear-gradient(135deg, #4a2f1c, #2a1810); border: 2px solid #8b5a2b; box-shadow: inset 0 0 0 1px #c89c5a, 0 2px 6px rgba(0,0,0,0.5); border-radius: 8px; }
+  .theme-vintage .section-title h2 { font-family: 'Playfair Display',serif; font-style: italic; font-size: 20px; color: #c89c5a; border-bottom: 1px dashed #8b5a2b; padding-bottom: 6px; }
+  .theme-vintage .cat-pill { background: linear-gradient(180deg, #4a2f1c, #3a2818); border: 1px solid #8b5a2b; color: #c89c5a; border-radius: 4px; font-family: 'Cormorant Garamond', serif; font-size: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.3); }
+  .theme-vintage .cat-pill.active { background: linear-gradient(180deg, #c89c5a, #8b5a2b); color: #2a1810; border-color: #f0e0c0; }
+  .theme-vintage .station { background: linear-gradient(180deg, #4a2f1c, #3a2818); border: 2px solid #8b5a2b; border-radius: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.4); padding: 12px; }
+  .theme-vintage .station-art { background: radial-gradient(circle at 30% 30%,#c89c5a,#5a3a22); box-shadow: inset 0 0 0 2px #2a1810, inset 0 0 0 4px #8b5a2b; border-radius: 50%; color: #2a1810; font-family: 'Playfair Display', serif; }
+  .theme-vintage .station-name { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px; color: #f0e0c0; }
+  .theme-vintage .station-meta { font-family: 'Cormorant Garamond', serif; font-style: italic; color: #c89c5a; }
+  .theme-vintage .favorite-star.active { color: #ff8c42; }
+  .theme-vintage .tab-bar-wrap { background: linear-gradient(180deg, #2a1810, #1a0f08); border-top: 2px solid #8b5a2b; }
+  .theme-vintage .tab.active { color: #c89c5a; }
+
+  /* === T4 BRUTAL LIST === */
+  .theme-brutal { background: #f5f3ed; color: #000; }
+  .theme-brutal .brand-logo { background: #000; border-radius: 0; }
+  .theme-brutal .brand-logo svg { stroke: #f5f3ed; }
+  .theme-brutal .brand-text .name { font-family: 'Archivo Black',sans-serif; font-size: 24px; text-transform: uppercase; letter-spacing: -1px; }
+  .theme-brutal .brand-text .sub { font-family: 'Bebas Neue',sans-serif; font-size: 14px; letter-spacing: 4px; margin-top: 0; color: #ff3355; }
+  .theme-brutal .list-search { background: #fff; border: 3px solid #000; border-radius: 0; }
+  .theme-brutal .list-search svg { stroke: #000; }
+  .theme-brutal .list-search input { color: #000; }
+  .theme-brutal .section-title h2 { font-family: 'Archivo Black',sans-serif; text-transform: uppercase; font-size: 22px; letter-spacing: -1px; }
+  .theme-brutal .section-title h2::before { content: '▶ '; color: #ff3355; }
+  .theme-brutal .section-title .meta { color: #000; font-weight: 700; }
+  .theme-brutal .cat-pill { background: #fff; border: 2px solid #000; border-radius: 0; color: #000; font-family: 'Archivo Black', sans-serif; font-weight: 700; text-transform: uppercase; font-size: 11px; }
+  .theme-brutal .cat-pill.active { background: #ff3355; color: #fff; border-color: #ff3355; }
+  .theme-brutal .stations { gap: 0; counter-reset: c; }
+  .theme-brutal .station { background: transparent; border: none; border-bottom: 3px solid #000; border-radius: 0; padding: 16px 0; counter-increment: c; }
+  .theme-brutal .station::before { content: counter(c, decimal-leading-zero); font-family: 'Archivo Black', sans-serif; font-size: 36px; font-weight: 900; color: #ff3355; margin-right: 16px; line-height: 1; letter-spacing: -2px; min-width: 60px; }
+  .theme-brutal .station-art { display: none; }
+  .theme-brutal .station-name { font-family: 'Archivo Black', sans-serif; font-size: 18px; text-transform: uppercase; letter-spacing: -0.5px; }
+  .theme-brutal .station-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .theme-brutal .favorite-star.active { color: #ff3355; }
+  .theme-brutal .tab-bar-wrap { background: #000; }
+  .theme-brutal .tab { color: #f5f3ed; }
+  .theme-brutal .tab.active { color: #ff3355; }
+
+  /* === T5 AUTO LIST === */
+  .theme-auto { background: radial-gradient(ellipse at top,#1a2332,#050a14 70%); color: #e0e8f0; }
+  .theme-auto::before { content: ""; position: fixed; inset: 0; z-index: 0; background-image: linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black, transparent 80%); pointer-events: none; }
+  .theme-auto .view { position: relative; z-index: 1; }
+  .theme-auto .brand-logo { background: linear-gradient(135deg,#00d4ff,#0066ff); box-shadow: 0 0 16px rgba(0,212,255,0.5); border-radius: 6px; }
+  .theme-auto .brand-logo svg { stroke: #000; }
+  .theme-auto .brand-text .name { font-family: 'Space Grotesk',sans-serif; font-weight: 700; font-size: 19px; letter-spacing: 0.5px; }
+  .theme-auto .brand-text .sub { font-family: 'JetBrains Mono',monospace; font-size: 10px; letter-spacing: 2px; color: #00d4ff; text-transform: uppercase; margin-top: 2px; }
+  .theme-auto .list-search { background: rgba(20,35,55,0.6); border: 1px solid rgba(0,212,255,0.3); border-radius: 6px; }
+  .theme-auto .section-title h2 { font-family: 'Space Grotesk',sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; color: #00d4ff; }
+  .theme-auto .cat-pill { background: rgba(20,35,55,0.6); border: 1px solid rgba(0,212,255,0.3); border-radius: 6px; color: #b0c0d0; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; padding: 10px 16px; }
+  .theme-auto .cat-pill.active { background: linear-gradient(135deg,#00d4ff,#0066ff); color: #000; border-color: #00d4ff; }
+  .theme-auto .stations { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 600px) { .theme-auto .stations { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1000px) { .theme-auto .stations { grid-template-columns: 1fr 1fr 1fr; } }
+  .theme-auto .station { background: rgba(20,35,55,0.6); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 14px; min-height: 72px; }
+  .theme-auto .station-art { background: linear-gradient(135deg,#00d4ff,#0066ff); color: #000; border-radius: 6px; width: 56px; height: 56px; }
+  .theme-auto .station-name { font-size: 15px; font-family: 'Space Grotesk', sans-serif; }
+  .theme-auto .station-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .theme-auto .favorite-star.active { color: #00d4ff; }
+  .theme-auto .tab-bar-wrap { background: rgba(5,10,20,0.95); border-color: rgba(0,212,255,0.15); }
+  .theme-auto .tab.active { color: #00d4ff; }
+
+  /* === T6 SUNSET LIST === */
+  .theme-sunset { background: linear-gradient(180deg,#1a0033 0%,#3a0066 30%,#ff006e 65%,#ff8800 90%,#ffcc00 100%); color: #fff; }
+  .theme-sunset::before { content: ""; position: fixed; inset: 0; z-index: 0; background-image: repeating-linear-gradient(0deg, transparent 0, transparent 30px, rgba(255,0,110,0.15) 30px, rgba(255,0,110,0.15) 31px); transform: perspective(400px) rotateX(60deg) translateY(50%) scale(2); transform-origin: center; pointer-events: none; opacity: 0.5; }
+  .theme-sunset .view { position: relative; z-index: 1; }
+  .theme-sunset .brand-logo { background: linear-gradient(135deg,#ff006e,#ffcc00); box-shadow: 0 0 24px rgba(255,0,110,0.6); border-radius: 8px; }
+  .theme-sunset .brand-logo svg { stroke: #1a0033; }
+  .theme-sunset .brand-text .name { font-family: 'Syne',sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; background: linear-gradient(90deg,#ffcc00,#ff006e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .theme-sunset .brand-text .sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 3px; color: #ffcc00; text-transform: uppercase; margin-top: 2px; }
+  .theme-sunset .list-search { background: rgba(26,0,51,0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,204,0,0.4); border-radius: 16px; }
+  .theme-sunset .section-title h2 { font-family: 'Syne',sans-serif; font-weight: 800; text-transform: uppercase; font-size: 14px; }
+  .theme-sunset .cat-pill { background: rgba(26,0,51,0.5); backdrop-filter: blur(10px); border-color: rgba(255,204,0,0.4); color: #ffcc00; border-radius: 20px; font-family: 'Syne', sans-serif; font-weight: 600; }
+  .theme-sunset .cat-pill.active { background: linear-gradient(135deg,#ffcc00,#ff006e); color: #1a0033; border-color: #ffcc00; }
+  .theme-sunset .stations { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (min-width: 600px) { .theme-sunset .stations { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 900px) { .theme-sunset .stations { grid-template-columns: repeat(4, 1fr); } }
+  .theme-sunset .station { background: rgba(26,0,51,0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,204,0,0.25); border-radius: 16px; flex-direction: column; align-items: stretch; padding: 12px; gap: 8px; }
+  .theme-sunset .station-art { width: 100%; height: auto; aspect-ratio: 1; border-radius: 10px; background: linear-gradient(135deg,#ff006e,#ffcc00); color: #1a0033; font-family: 'Syne', sans-serif; font-size: 28px; }
+  .theme-sunset .station-info { width: 100%; }
+  .theme-sunset .station-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; }
+  .theme-sunset .station-meta { font-size: 10px; }
+  .theme-sunset .favorite-star { position: absolute; top: 18px; right: 18px; }
+  .theme-sunset .favorite-star.active { color: #ffcc00; }
+  .theme-sunset .tab-bar-wrap { background: rgba(26,0,51,0.85); border-color: rgba(255,204,0,0.3); }
+  .theme-sunset .tab.active { color: #ffcc00; }
+
+  /* === T7 TERMINAL LIST === */
+  .theme-terminal { background: #001100; color: #00ff41; font-family: 'JetBrains Mono', monospace; }
+  .theme-terminal::before { content: ""; position: fixed; inset: 0; z-index: 0; background: repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0, rgba(0,255,65,0.03) 1px, transparent 1px, transparent 3px); pointer-events: none; }
+  .theme-terminal::after { content: ""; position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%); pointer-events: none; }
+  .theme-terminal .view { position: relative; z-index: 1; }
+  .theme-terminal .brand-logo { background: #002200; border: 1px solid #00ff41; box-shadow: 0 0 12px rgba(0,255,65,0.5); border-radius: 0; }
+  .theme-terminal .brand-logo svg { stroke: #00ff41; }
+  .theme-terminal .brand-text .name { font-family: 'VT323',monospace; font-size: 28px; color: #00ff41; text-shadow: 0 0 10px #00ff41; letter-spacing: 0; }
+  .theme-terminal .brand-text .name::before { content: '> '; }
+  .theme-terminal .brand-text .name::after { content: '_'; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .theme-terminal .brand-text .sub { font-family: 'VT323',monospace; font-size: 14px; color: #008f11; margin-top: 0; }
+  .theme-terminal .list-search { background: #002200; border: 1px solid #00ff41; border-radius: 0; }
+  .theme-terminal .list-search svg { stroke: #00ff41; }
+  .theme-terminal .list-search input { color: #00ff41; }
+  .theme-terminal .list-search input::placeholder { color: #008f11; }
+  .theme-terminal .section-title h2 { font-family: 'VT323',monospace; font-size: 22px; color: #00ff41; letter-spacing: 0; }
+  .theme-terminal .section-title h2::before { content: '[ '; }
+  .theme-terminal .section-title h2::after { content: ' ]'; }
+  .theme-terminal .section-title .meta { color: #008f11; }
+  .theme-terminal .cat-pill { background: transparent; border: 1px solid #008f11; color: #00ff41; border-radius: 0; font-family: 'VT323',monospace; font-size: 16px; padding: 4px 10px; }
+  .theme-terminal .cat-pill::before { content: '$ '; }
+  .theme-terminal .cat-pill.active { background: #00ff41; color: #001100; border-color: #00ff41; }
+  .theme-terminal .stations { gap: 0; border-top: 1px dashed #008f11; counter-reset: c; }
+  .theme-terminal .station { background: transparent; border: none; border-bottom: 1px dashed #008f11; border-radius: 0; padding: 12px 8px; counter-increment: c; }
+  .theme-terminal .station::before { content: '[' counter(c, decimal-leading-zero) ']'; font-family: 'VT323', monospace; font-size: 16px; color: #008f11; margin-right: 8px; min-width: 50px; }
+  .theme-terminal .station-art { background: #002200; border: 1px solid #00ff41; color: #00ff41; border-radius: 0; font-family: 'VT323',monospace; font-size: 22px; width: 44px; height: 44px; }
+  .theme-terminal .station-name { font-family: 'VT323', monospace; font-size: 18px; color: #00ff41; letter-spacing: 0; }
+  .theme-terminal .station-meta { font-family: 'VT323', monospace; font-size: 13px; color: #008f11; }
+  .theme-terminal .favorite-star.active { color: #ffaa00; }
+  .theme-terminal .tab-bar-wrap { background: #001100; border-color: #00ff41; }
+  .theme-terminal .tab { color: #008f11; font-family: 'VT323',monospace; }
+  .theme-terminal .tab span { font-size: 14px; }
+  .theme-terminal .tab.active { color: #00ff41; }
+
+  /* === T8 BAUHAUS LIST === */
+  .theme-bauhaus { background: #f4f0e8; color: #1a1a1a; }
+  .theme-bauhaus::before { content: ""; position: fixed; top: 0; left: 0; width: 250px; height: 250px; background: #4287f5; border-radius: 50% 50% 0 0; pointer-events: none; opacity: 0.6; z-index: 0; }
+  .theme-bauhaus::after { content: ""; position: fixed; bottom: 0; right: 0; width: 300px; height: 300px; background: #f49d37; border-radius: 50% 0 0 50%; pointer-events: none; opacity: 0.6; z-index: 0; }
+  .theme-bauhaus .view { position: relative; z-index: 1; }
+  .theme-bauhaus .brand-logo { background: #d72638; border-radius: 50%; }
+  .theme-bauhaus .brand-logo svg { stroke: #f4f0e8; }
+  .theme-bauhaus .brand-text .name { font-family: 'Archivo Black',sans-serif; font-size: 22px; text-transform: uppercase; letter-spacing: -1px; color: #1a1a1a; }
+  .theme-bauhaus .brand-text .sub { font-family: 'JetBrains Mono',monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #d72638; text-transform: uppercase; margin-top: 0; }
+  .theme-bauhaus .list-search { background: #fff; border: 3px solid #1a1a1a; border-radius: 0; box-shadow: 4px 4px 0 0 #d72638; }
+  .theme-bauhaus .list-search svg { stroke: #1a1a1a; }
+  .theme-bauhaus .section-title h2 { font-family: 'Archivo Black',sans-serif; text-transform: uppercase; font-size: 18px; }
+  .theme-bauhaus .cat-pill { background: #fff; border: 2px solid #1a1a1a; border-radius: 0; color: #1a1a1a; font-weight: 700; text-transform: uppercase; font-size: 11px; font-family: 'Archivo Black', sans-serif; }
+  .theme-bauhaus .cat-pill.active { background: #d72638; color: #f4f0e8; border-color: #d72638; box-shadow: 4px 4px 0 0 #1a1a1a; }
+  .theme-bauhaus .stations { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (min-width: 600px) { .theme-bauhaus .stations { grid-template-columns: repeat(3, 1fr); } }
+  .theme-bauhaus .station { background: #fff; border: 3px solid #1a1a1a; border-radius: 0; padding: 16px; flex-direction: column; align-items: stretch; gap: 10px; box-shadow: 4px 4px 0 0 #1a1a1a; }
+  .theme-bauhaus .station-art { width: 100%; height: 80px; border: 2px solid #1a1a1a; border-radius: 0; background: #f49d37; color: #1a1a1a; font-family: 'Archivo Black', sans-serif; font-size: 28px; }
+  .theme-bauhaus .station:nth-child(3n) .station-art { background: #4287f5; border-radius: 50%; color: #fff; }
+  .theme-bauhaus .station:nth-child(3n+1) .station-art { background: #d72638; color: #f4f0e8; clip-path: polygon(50% 0, 100% 100%, 0 100%); border: none; }
+  .theme-bauhaus .station-name { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; font-size: 13px; letter-spacing: -0.3px; }
+  .theme-bauhaus .station-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .theme-bauhaus .favorite-star { padding: 0; align-self: flex-end; }
+  .theme-bauhaus .favorite-star.active { color: #d72638; }
+  .theme-bauhaus .tab-bar-wrap { background: #1a1a1a; border-color: #1a1a1a; }
+  .theme-bauhaus .tab { color: #f4f0e8; }
+  .theme-bauhaus .tab.active { color: #f49d37; }
+
+  /* =================================================================
+     PLAYER IMPLEMENTATIONS — one per theme, all unique
+     ================================================================= */
+
+  /* === PLAYER NEON: HUD FUTURISTA === */
+  .player-neon {
+    padding: 0 24px 40px;
+    color: #00f0ff;
+  }
+  .player-neon .hud-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .player-neon .hud-cell {
+    background: rgba(0,240,255,0.05);
+    border: 1px solid rgba(0,240,255,0.3);
+    padding: 6px 10px;
+    clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+  }
+  .player-neon .hud-label { color: #525a82; font-size: 8px; letter-spacing: 2px; margin-bottom: 2px; }
+  .player-neon .hud-value { color: #00f0ff; font-weight: 700; font-size: 13px; }
+  .player-neon .neon-cover-wrap {
+    display: flex; justify-content: center; align-items: center;
+    margin: 8px 0 16px;
+    position: relative;
+  }
+  .player-neon .neon-cover {
+    width: 260px; height: 260px;
+    max-width: 70vw; max-height: 70vw;
+    background: linear-gradient(135deg,#1a0033,#003344);
+    border: 1px solid rgba(0,240,255,0.5);
+    box-shadow: 0 0 60px rgba(255,43,214,0.4), 0 0 100px rgba(0,240,255,0.3);
+    clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px; font-family: 'Orbitron', sans-serif;
+  }
+  .player-neon .neon-cover::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,240,255,0.08) 3px, rgba(0,240,255,0.08) 4px);
+    pointer-events: none;
+  }
+  .player-neon .neon-corner {
+    position: absolute; width: 30px; height: 30px;
+    border: 2px solid #00f0ff;
+    pointer-events: none;
+  }
+  .player-neon .neon-corner.tl { top: -6px; left: -6px; border-right: none; border-bottom: none; }
+  .player-neon .neon-corner.tr { top: -6px; right: -6px; border-left: none; border-bottom: none; }
+  .player-neon .neon-corner.bl { bottom: -6px; left: -6px; border-right: none; border-top: none; }
+  .player-neon .neon-corner.br { bottom: -6px; right: -6px; border-left: none; border-top: none; }
+  .player-neon .neon-title {
+    text-align: center; font-family: 'Orbitron', sans-serif;
+    font-weight: 900; font-size: 22px; letter-spacing: 1px;
+    color: #fff; margin-bottom: 6px;
+  }
+  .player-neon .neon-subtitle {
+    text-align: center; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #8b94c0; margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .player-neon .neon-subtitle .country { color: #00f0ff; font-weight: 700; }
+  .player-neon .neon-live { display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #ff3355; }
+  .player-neon .viz {
+    height: 50px; justify-content: center; margin-bottom: 24px;
+  }
+  .player-neon .viz .bar {
+    background: linear-gradient(180deg,#00f0ff,#ff2bd6);
+    box-shadow: 0 0 8px #00f0ff;
+  }
+  .player-neon .ctrls { display: flex; justify-content: center; align-items: center; gap: 10px; }
+  .player-neon .nctrl {
+    width: 48px; height: 48px;
+    border: 1px solid rgba(0,240,255,0.3);
+    background: rgba(0,240,255,0.05);
+    color: #00f0ff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+  }
+  .player-neon .nctrl:active { transform: scale(0.94); }
+  .player-neon .nctrl svg { width: 16px; height: 16px; }
+  .player-neon .nplay {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg,#00f0ff,#ff2bd6);
+    border: none; color: #000;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px rgba(0,240,255,0.6), 0 0 80px rgba(255,43,214,0.4);
+    clip-path: polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
+  }
+  .player-neon .nplay svg { width: 26px; height: 26px; }
+  .player-neon .back-btn { background: rgba(18,22,50,0.5); border-color: rgba(0,240,255,0.3); border-radius: 0; clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); color: #00f0ff; }
+
+  /* === PLAYER PREMIUM: REVISTA EDITORIAL === */
+  .player-premium { color: #f5f1e8; padding: 0 24px 40px; }
+  .player-premium .mag-issue {
+    text-align: center; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 4px; color: #9c9489;
+    text-transform: uppercase; padding: 8px 0 4px;
+    border-top: 1px solid rgba(212,175,55,0.3);
+    border-bottom: 1px solid rgba(212,175,55,0.3);
+    margin-bottom: 16px;
+  }
+  .player-premium .mag-issue .accent { color: #d4af37; }
+  .player-premium .mag-cover-wrap {
+    display: flex; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .player-premium .mag-cover {
+    width: 280px; height: 280px;
+    max-width: 75vw; max-height: 75vw;
+    background: linear-gradient(135deg,#d4af37,#b87333);
+    color: rgba(0,0,0,0.6);
+    box-shadow: 0 20px 60px rgba(212,175,55,0.3);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 90px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .player-premium .mag-cover::before {
+    content: ""; position: absolute;
+    top: 8px; left: 8px; right: 8px; bottom: 8px;
+    border: 1px solid rgba(0,0,0,0.2);
+    pointer-events: none;
+  }
+  .player-premium .mag-headline {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: clamp(28px, 7vw, 44px);
+    line-height: 1; text-align: center;
+    color: #fff; margin-bottom: 10px;
+  }
+  .player-premium .mag-headline em { color: #d4af37; font-style: italic; }
+  .player-premium .mag-byline {
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 16px;
+    color: #9c9489; margin-bottom: 4px;
+  }
+  .player-premium .mag-byline .country { color: #d4af37; font-weight: 700; font-style: normal; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; }
+  .player-premium .mag-divider {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin: 16px 0;
+    color: #d4af37;
+  }
+  .player-premium .mag-divider::before, .player-premium .mag-divider::after {
+    content: ""; flex: 1; height: 1px; background: rgba(212,175,55,0.3); max-width: 60px;
+  }
+  .player-premium .mag-divider span { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; }
+  .player-premium .mag-live {
+    display: flex; justify-content: center; align-items: center; gap: 6px;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 3px; color: #ff3355;
+  }
+  .player-premium .viz {
+    height: 40px; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .player-premium .viz .bar {
+    background: linear-gradient(180deg,#f0c95a,#b87333);
+  }
+  .player-premium .ctrls {
+    display: flex; justify-content: center; align-items: center; gap: 14px;
+  }
+  .player-premium .pctrl {
+    width: 50px; height: 50px; border-radius: 50%;
+    border: 1px solid rgba(212,175,55,0.3);
+    background: transparent; color: #9c9489;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-premium .pctrl svg { width: 16px; height: 16px; }
+  .player-premium .pplay {
+    width: 74px; height: 74px; border-radius: 50%;
+    background: linear-gradient(135deg,#f0c95a,#b87333);
+    border: none; color: #0a0908;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 32px rgba(212,175,55,0.4);
+  }
+  .player-premium .pplay svg { width: 26px; height: 26px; }
+  .player-premium .back-btn { background: rgba(28,25,22,0.7); border-color: rgba(212,175,55,0.2); color: #d4af37; }
+
+  /* === PLAYER VINTAGE: RADIO ANALÓGICA REAL === */
+  .player-vintage {
+    color: #f0e0c0;
+    padding: 0 16px 40px;
+  }
+  .player-vintage .radio-frame {
+    background: linear-gradient(135deg, #5a3a22, #2a1810);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 8px 0;
+    box-shadow:
+      inset 0 0 0 2px #c89c5a,
+      inset 0 0 0 5px #2a1810,
+      0 12px 30px rgba(0,0,0,0.7);
+    position: relative;
+  }
+  /* Dial de frecuencia horizontal arriba */
+  .player-vintage .dial {
+    background: linear-gradient(180deg, #f0e0c0, #c89c5a);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    box-shadow: inset 0 0 0 1px #2a1810, inset 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    height: 36px;
+    display: flex; align-items: center;
+  }
+  .player-vintage .dial-marks {
+    flex: 1;
+    height: 100%;
+    background-image: repeating-linear-gradient(90deg,
+      #2a1810 0,
+      #2a1810 1px,
+      transparent 1px,
+      transparent 10px,
+      #2a1810 10px, #2a1810 11px,
+      transparent 11px, transparent 30px
+    );
+    background-position-x: -50px;
+    animation: dialMove 20s linear infinite;
+    opacity: 0.5;
+  }
+  @keyframes dialMove { from { background-position-x: 0; } to { background-position-x: 100px; } }
+  .player-vintage .dial-needle {
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 2px;
+    background: #ff4400;
+    box-shadow: 0 0 6px #ff4400;
+    z-index: 2;
+  }
+  .player-vintage .dial-freq {
+    position: absolute;
+    top: 50%; left: 12px;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-style: italic;
+    font-size: 14px;
+    color: #2a1810;
+    z-index: 2;
+  }
+  .player-vintage .dial-band {
+    position: absolute;
+    top: 50%; right: 12px;
+    transform: translateY(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 13px;
+    color: #2a1810;
+    z-index: 2;
+  }
+  /* Vinilo en el centro */
+  .player-vintage .vinyl-wrap {
+    display: flex; justify-content: center; align-items: center;
+    margin: 16px 0;
+    position: relative;
+  }
+  .player-vintage .vinyl {
+    width: 240px; height: 240px;
+    max-width: 70vw; max-height: 70vw;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #5a3a22, #1a0f08);
+    box-shadow:
+      inset 0 0 0 3px #2a1810,
+      0 12px 30px rgba(0,0,0,0.7);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-vintage .vinyl.spinning { animation: spin 6s linear infinite; }
+  .player-vintage .vinyl::before {
+    content: ""; position: absolute; inset: 14%;
+    border: 1px dashed rgba(200,156,90,0.2);
+    border-radius: 50%;
+  }
+  .player-vintage .vinyl-label {
+    width: 50%; height: 50%; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #c89c5a, #8b5a2b);
+    box-shadow: inset 0 0 0 2px #2a1810;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 36px;
+    color: #2a1810;
+    position: relative;
+    overflow: hidden;
+  }
+  .player-vintage .vinyl-label .logo-img { padding: 14%; background: rgba(0,0,0,0.05); }
+  .player-vintage .vinyl-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px; height: 12px;
+    background: #2a1810;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px #c89c5a;
+    z-index: 3;
+  }
+  /* Info */
+  .player-vintage .vntg-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-style: italic;
+    font-size: 22px;
+    color: #f0e0c0; text-align: center;
+    margin-top: 16px; margin-bottom: 4px;
+  }
+  .player-vintage .vntg-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 14px;
+    color: #c89c5a; text-align: center;
+    margin-bottom: 16px;
+  }
+  /* VU meter (signal indicator) */
+  .player-vintage .vu-meter {
+    display: flex; justify-content: center; gap: 3px;
+    margin-bottom: 18px;
+  }
+  .player-vintage .vu-meter .bar {
+    width: 4px; height: 18px;
+    background: linear-gradient(180deg,#ff4400, #8b5a2b);
+    border-radius: 1px;
+    transform-origin: bottom;
+  }
+  .player-vintage .vu-meter.playing .bar { animation: vuBeat 0.7s ease-in-out infinite; }
+  .player-vintage .vu-meter .bar:nth-child(1) { animation-delay: -.1s; }
+  .player-vintage .vu-meter .bar:nth-child(2) { animation-delay: -.3s; }
+  .player-vintage .vu-meter .bar:nth-child(3) { animation-delay: -.5s; }
+  .player-vintage .vu-meter .bar:nth-child(4) { animation-delay: -.2s; }
+  .player-vintage .vu-meter .bar:nth-child(5) { animation-delay: -.4s; }
+  .player-vintage .vu-meter .bar:nth-child(6) { animation-delay: -.6s; }
+  .player-vintage .vu-meter .bar:nth-child(7) { animation-delay: -.1s; }
+  .player-vintage .vu-meter .bar:nth-child(8) { animation-delay: -.5s; }
+  @keyframes vuBeat { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+  /* Knobs (controls as radio knobs) */
+  .player-vintage .knobs {
+    display: flex; justify-content: center; align-items: center; gap: 12px;
+  }
+  .player-vintage .knob {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #4a2f1c, #2a1810);
+    border: 2px solid #8b5a2b;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.5);
+    color: #c89c5a;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .player-vintage .knob:active { transform: scale(0.94); }
+  .player-vintage .knob svg { width: 18px; height: 18px; }
+  .player-vintage .knob::before {
+    content: ""; position: absolute;
+    top: 4px; left: 50%;
+    transform: translateX(-50%);
+    width: 3px; height: 6px;
+    background: #ff4400;
+    border-radius: 1px;
+  }
+  .player-vintage .knob-play {
+    width: 80px; height: 80px;
+    background: radial-gradient(circle at 30% 30%, #f4d088, #8b5a2b);
+    color: #2a1810;
+    box-shadow:
+      inset 0 0 0 3px #5a3a22,
+      inset 0 2px 4px rgba(255,255,255,0.3),
+      0 8px 20px rgba(0,0,0,0.6);
+  }
+  .player-vintage .knob-play svg { width: 26px; height: 26px; }
+  .player-vintage .back-btn { background: radial-gradient(circle at 30% 30%, #c89c5a, #5a3a22); border: 2px solid #2a1810; color: #2a1810; }
+
+  /* === PLAYER BRUTAL: POSTER GIGANTE === */
+  .player-brutal { background: #ff3355; min-height: 100vh; color: #fff; padding: 0; position: relative; overflow: hidden; }
+  .player-brutal .brutal-bignum {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 70vh; line-height: 0.85;
+    color: rgba(0,0,0,0.18);
+    z-index: 0; pointer-events: none;
+    user-select: none;
+    letter-spacing: -8px;
+  }
+  .player-brutal .brutal-inner {
+    position: relative; z-index: 2;
+    padding: 0 24px 40px;
+  }
+  .player-brutal .player-header { padding: 18px 24px; }
+  .player-brutal .player-header-title { color: #fff; font-family: 'Archivo Black', sans-serif; }
+  .player-brutal .back-btn { background: #000; border: 3px solid #fff; border-radius: 0; color: #fff; }
+  .player-brutal .brutal-live {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #000; color: #fff;
+    padding: 6px 12px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px; letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+  .player-brutal .brutal-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(40px, 12vw, 90px);
+    line-height: 0.9;
+    text-transform: uppercase;
+    letter-spacing: -3px;
+    color: #fff;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+  .player-brutal .brutal-info {
+    display: flex; flex-direction: column; gap: 4px;
+    margin-bottom: 28px;
+    font-family: 'Archivo Black', sans-serif;
+    text-transform: uppercase;
+  }
+  .player-brutal .brutal-info-row {
+    display: flex; justify-content: space-between;
+    border-bottom: 3px solid #000;
+    padding: 6px 0;
+  }
+  .player-brutal .brutal-info-row .label { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 10px; letter-spacing: 2px; color: #000; }
+  .player-brutal .brutal-info-row .value { font-family: 'Archivo Black', sans-serif; font-size: 14px; color: #fff; }
+  .player-brutal .viz {
+    height: 60px; justify-content: space-between; margin-bottom: 28px;
+  }
+  .player-brutal .viz .bar { background: #000; flex: 1; width: auto; max-width: 12px; border-radius: 0; }
+  .player-brutal .ctrls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr 1fr 1fr;
+    gap: 8px;
+  }
+  .player-brutal .bctrl, .player-brutal .bplay {
+    background: #000; color: #fff;
+    border: none;
+    font-family: 'Archivo Black', sans-serif;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 14px 0;
+  }
+  .player-brutal .bctrl:active, .player-brutal .bplay:active { transform: translate(2px, 2px); }
+  .player-brutal .bctrl svg { width: 18px; height: 18px; }
+  .player-brutal .bplay {
+    background: #fff; color: #000;
+    box-shadow: 6px 6px 0 0 #000;
+    border: 3px solid #000;
+    padding: 18px 0;
+  }
+  .player-brutal .bplay svg { width: 24px; height: 24px; }
+
+  /* === PLAYER AUTO: VELOCÍMETRO === */
+  .player-auto {
+    color: #e0e8f0;
+    padding: 0 24px 40px;
+  }
+  .player-auto .speedo-wrap {
+    display: flex; justify-content: center;
+    margin: 16px 0 24px;
+    position: relative;
+  }
+  .player-auto .speedo {
+    width: 320px; height: 320px;
+    max-width: 85vw; max-height: 85vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, #0a1828, #050a14);
+    box-shadow:
+      inset 0 0 0 2px #00d4ff,
+      inset 0 0 0 14px rgba(0,212,255,0.05),
+      inset 0 0 0 16px rgba(0,212,255,0.4),
+      0 0 60px rgba(0,212,255,0.4);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-auto .speedo-ticks {
+    position: absolute; inset: 8px;
+    border-radius: 50%;
+    background-image: conic-gradient(from -135deg,
+      #00d4ff 0deg, transparent 0deg,
+      transparent 5deg, #00d4ff 5deg, #00d4ff 6deg,
+      transparent 6deg, transparent 11deg, #00d4ff 11deg, #00d4ff 12deg,
+      transparent 12deg
+    );
+    mask-image: radial-gradient(circle, transparent 60%, black 60%, black 64%, transparent 64%);
+    -webkit-mask-image: radial-gradient(circle, transparent 60%, black 60%, black 64%, transparent 64%);
+    opacity: 0.4;
+  }
+  .player-auto .speedo-inner {
+    width: 70%; height: 70%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #0a1828, #050a14);
+    box-shadow: inset 0 0 30px rgba(0,212,255,0.3);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .player-auto .speedo-cover {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg,#00d4ff,#0066ff);
+    color: #000;
+    box-shadow: 0 0 20px rgba(0,212,255,0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .player-auto .speedo-cover .logo-img { padding: 10px; }
+  .player-auto .speedo-bitrate {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: #00d4ff;
+    line-height: 1;
+  }
+  .player-auto .speedo-bitrate-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; color: #b0c0d0;
+    text-transform: uppercase; margin-top: 4px;
+  }
+  .player-auto .speedo-live {
+    position: absolute; top: 12%; left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 2px;
+    color: #ff3355;
+  }
+  /* Info HUD bar above speedo */
+  .player-auto .hud-bar {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .player-auto .hud-tile {
+    background: rgba(20,35,55,0.7);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .player-auto .hud-tile-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: 2px; color: #b0c0d0;
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .player-auto .hud-tile-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px; color: #00d4ff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* Station name banner below speedo */
+  .player-auto .auto-name {
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .player-auto .auto-sub {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    color: #00d4ff; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .player-auto .ctrls {
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+  }
+  .player-auto .actrl {
+    width: 52px; height: 52px;
+    background: rgba(20,35,55,0.7);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 8px;
+    color: #b0c0d0;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-auto .actrl svg { width: 18px; height: 18px; }
+  .player-auto .aplay {
+    width: 76px; height: 76px;
+    background: linear-gradient(135deg,#00d4ff,#0066ff);
+    border: none; color: #000;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,212,255,0.5);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-auto .aplay svg { width: 28px; height: 28px; }
+  .player-auto .back-btn { background: rgba(20,35,55,0.7); border: 1px solid rgba(0,212,255,0.3); border-radius: 8px; color: #00d4ff; }
+
+  /* === PLAYER SUNSET: VINILO + HORIZONTE === */
+  .player-sunset { color: #fff; padding: 0 24px 40px; position: relative; }
+  .player-sunset .sun-bg {
+    position: absolute; left: 50%; bottom: 30%;
+    transform: translateX(-50%);
+    width: 60vw; height: 60vw;
+    max-width: 400px; max-height: 400px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffcc00, #ff006e 70%);
+    box-shadow: 0 0 100px rgba(255,0,110,0.6);
+    z-index: 0;
+    mask-image: linear-gradient(180deg, black 60%, transparent 75%);
+    -webkit-mask-image: linear-gradient(180deg, black 60%, transparent 75%);
+  }
+  .player-sunset .sun-stripes {
+    position: absolute; left: 50%; bottom: 30%;
+    transform: translateX(-50%);
+    width: 60vw; height: 60vw;
+    max-width: 400px; max-height: 400px;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 15px, #1a0033 15px, #1a0033 18px);
+    z-index: 1;
+    mask-image: linear-gradient(180deg, black 60%, transparent 75%);
+    -webkit-mask-image: linear-gradient(180deg, black 60%, transparent 75%);
+  }
+  .player-sunset .sun-vinyl-wrap {
+    position: relative; z-index: 2;
+    display: flex; justify-content: center;
+    margin: 16px 0 24px;
+  }
+  .player-sunset .sun-vinyl {
+    width: 240px; height: 240px;
+    max-width: 70vw; max-height: 70vw;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #2a0044, #0a0014);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 60px rgba(255,0,110,0.5);
+  }
+  .player-sunset .sun-vinyl.spinning { animation: spin 6s linear infinite; }
+  .player-sunset .sun-vinyl::before {
+    content: ""; position: absolute; inset: 5%;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, transparent 0, transparent 4px, rgba(255,255,255,0.04) 4px, rgba(255,255,255,0.04) 5px);
+  }
+  .player-sunset .sun-label {
+    width: 45%; height: 45%; border-radius: 50%;
+    background: linear-gradient(135deg, #ff006e, #ffcc00);
+    color: #1a0033;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    box-shadow: 0 0 20px rgba(255,204,0,0.5);
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+  }
+  .player-sunset .sun-label .logo-img { padding: 16%; }
+  /* Info pegado abajo */
+  .player-sunset .sun-info {
+    position: relative; z-index: 2;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .player-sunset .sun-live {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 3px; color: #ffcc00; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .player-sunset .sun-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 26px;
+    background: linear-gradient(90deg, #ffcc00, #ff006e);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .player-sunset .sun-sub {
+    font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 13px; color: #ffcc00;
+    letter-spacing: 1px;
+  }
+  .player-sunset .viz {
+    height: 36px; justify-content: center;
+    margin: 14px 0 20px;
+    position: relative; z-index: 2;
+  }
+  .player-sunset .viz .bar {
+    background: linear-gradient(180deg, #ffcc00, #ff006e);
+    box-shadow: 0 0 6px #ff006e;
+  }
+  .player-sunset .ctrls {
+    display: flex; justify-content: center; gap: 12px;
+    position: relative; z-index: 2;
+  }
+  .player-sunset .sctrl {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(26,0,51,0.5); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,204,0,0.4);
+    color: #ffcc00; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-sunset .sctrl svg { width: 18px; height: 18px; }
+  .player-sunset .splay {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffcc00, #ff006e);
+    color: #1a0033; border: none;
+    cursor: pointer;
+    box-shadow: 0 0 40px rgba(255,0,110,0.7);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-sunset .splay svg { width: 28px; height: 28px; }
+  .player-sunset .back-btn { background: rgba(26,0,51,0.5); border: 1px solid rgba(255,204,0,0.4); color: #ffcc00; position: relative; z-index: 3; }
+
+  /* === PLAYER TERMINAL: CLI COMPLETA === */
+  .player-terminal {
+    color: #00ff41; padding: 16px 20px 40px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .player-terminal .term-window {
+    border: 1px solid #00ff41;
+    background: rgba(0,17,0,0.6);
+    box-shadow: 0 0 24px rgba(0,255,65,0.2);
+    padding: 14px;
+  }
+  .player-terminal .term-bar {
+    display: flex; align-items: center; gap: 6px;
+    border-bottom: 1px dashed #008f11;
+    padding-bottom: 8px; margin-bottom: 12px;
+    font-family: 'VT323', monospace; font-size: 16px;
+  }
+  .player-terminal .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .player-terminal .term-dot.r { background: #ff0040; }
+  .player-terminal .term-dot.y { background: #ffaa00; }
+  .player-terminal .term-dot.g { background: #00ff41; }
+  .player-terminal .term-title { flex: 1; text-align: center; color: #008f11; font-size: 14px; letter-spacing: 2px; }
+  .player-terminal .term-line {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #00ff41;
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+  .player-terminal .term-line .prompt { color: #008f11; }
+  .player-terminal .term-line .label { color: #008f11; }
+  .player-terminal .term-line .accent { color: #ffaa00; }
+  .player-terminal .term-ascii {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    color: #00ff41;
+    text-shadow: 0 0 6px #00ff41;
+    white-space: pre;
+    line-height: 1;
+    margin: 12px 0;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .player-terminal .term-bars-row {
+    display: flex; align-items: flex-end; gap: 1px;
+    height: 60px;
+    margin: 12px 0;
+    font-family: 'VT323', monospace;
+  }
+  .player-terminal .term-bars-row .bar {
+    flex: 1; max-width: 8px;
+    background: #00ff41; box-shadow: 0 0 4px #00ff41;
+  }
+  .player-terminal .term-bars-row.playing .bar { animation: vizBeat 0.9s ease-in-out infinite; }
+  .player-terminal .term-cursor::after {
+    content: '_';
+    animation: blink 1s steps(2) infinite;
+    color: #00ff41;
+  }
+  .player-terminal .term-cmds {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    margin-top: 14px;
+  }
+  .player-terminal .tcmd {
+    background: transparent;
+    border: 1px solid #00ff41;
+    color: #00ff41;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    padding: 10px;
+    cursor: pointer;
+    text-align: left;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .player-terminal .tcmd:active { background: rgba(0,255,65,0.1); }
+  .player-terminal .tcmd::before { content: '$ '; color: #008f11; }
+  .player-terminal .tcmd-play {
+    grid-column: 1 / -1;
+    background: #00ff41; color: #001100;
+    font-weight: 700; justify-content: center;
+    box-shadow: 0 0 20px rgba(0,255,65,0.5);
+  }
+  .player-terminal .tcmd-play::before { content: '> '; color: #001100; }
+  .player-terminal .back-btn { background: #002200; border: 1px solid #00ff41; color: #00ff41; border-radius: 0; }
+  .player-terminal .player-header-title { color: #00ff41; font-family: 'VT323', monospace; font-size: 16px; }
+
+  /* === PLAYER BAUHAUS: COMPOSICIÓN GEOMÉTRICA === */
+  .player-bauhaus { color: #1a1a1a; padding: 0 20px 40px; position: relative; }
+  .player-bauhaus .player-header-title { color: #1a1a1a; font-family: 'Archivo Black', sans-serif; }
+  .player-bauhaus .back-btn { background: #1a1a1a; border: 2px solid #1a1a1a; color: #f4f0e8; border-radius: 0; box-shadow: 3px 3px 0 0 #d72638; }
+  .player-bauhaus .bh-composition {
+    position: relative;
+    height: 56vh; min-height: 360px; max-height: 480px;
+    margin: 8px 0 20px;
+  }
+  /* Big yellow square top-right */
+  .player-bauhaus .bh-square {
+    position: absolute;
+    top: 8%; right: 5%;
+    width: 45%; height: 50%;
+    background: #f49d37;
+    border: 3px solid #1a1a1a;
+    box-shadow: 8px 8px 0 0 #1a1a1a;
+  }
+  /* Big red triangle bottom-left */
+  .player-bauhaus .bh-triangle {
+    position: absolute;
+    bottom: 5%; left: 5%;
+    width: 0; height: 0;
+    border-left: 60px solid transparent;
+    border-right: 60px solid transparent;
+    border-bottom: 100px solid #d72638;
+    filter: drop-shadow(6px 6px 0 #1a1a1a);
+  }
+  /* Blue circle (cover) in center */
+  .player-bauhaus .bh-circle {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; height: 200px;
+    max-width: 60vw; max-height: 60vw;
+    border-radius: 50%;
+    background: #4287f5;
+    border: 4px solid #1a1a1a;
+    box-shadow: 8px 8px 0 0 #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 70px;
+    overflow: hidden;
+  }
+  .player-bauhaus .bh-circle .logo-img { padding: 14%; background: transparent; }
+  /* Black diagonal line */
+  .player-bauhaus .bh-line {
+    position: absolute;
+    top: 80%; left: 10%;
+    width: 70%; height: 4px;
+    background: #1a1a1a;
+    transform: rotate(-12deg);
+  }
+  .player-bauhaus .bh-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(28px, 7vw, 44px);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    line-height: 0.95;
+    margin-bottom: 10px;
+  }
+  .player-bauhaus .bh-info {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 16px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px; text-transform: uppercase;
+  }
+  .player-bauhaus .bh-info-tag {
+    padding: 4px 10px;
+    background: #1a1a1a; color: #f4f0e8;
+  }
+  .player-bauhaus .bh-info-tag.red { background: #d72638; }
+  .player-bauhaus .bh-info-tag.yellow { background: #f49d37; color: #1a1a1a; }
+  .player-bauhaus .bh-info-tag.blue { background: #4287f5; color: #fff; }
+  .player-bauhaus .viz {
+    height: 32px; justify-content: flex-start;
+    margin-bottom: 20px;
+  }
+  .player-bauhaus .viz .bar {
+    background: #d72638;
+  }
+  .player-bauhaus .viz .bar:nth-child(3n) { background: #4287f5; }
+  .player-bauhaus .viz .bar:nth-child(3n+1) { background: #f49d37; }
+  .player-bauhaus .ctrls {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .player-bauhaus .bctl {
+    width: 50px; height: 50px;
+    background: #fff; color: #1a1a1a;
+    border: 3px solid #1a1a1a;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 0 #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-bauhaus .bctl svg { width: 18px; height: 18px; }
+  .player-bauhaus .bplay-bh {
+    width: 76px; height: 76px;
+    background: #d72638; color: #f4f0e8;
+    border: 4px solid #1a1a1a;
+    border-radius: 50%;
+    box-shadow: 4px 4px 0 0 #1a1a1a;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .player-bauhaus .bplay-bh svg { width: 26px; height: 26px; }
+
+  /* =================================================================
+     LANDSCAPE — most players adapt naturally;
+     specific overrides where needed
+     ================================================================= */
+  @media (orientation: landscape) and (max-height: 600px) {
+    /* List view: more cols */
+    .theme-premium .stations,
+    .theme-vintage .stations,
+    .theme-brutal .stations,
+    .theme-terminal .stations { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* Compact headers */
+    .list-header { padding: 8px 20px 4px; }
+    .list-search-wrap, .list-categories-wrap { padding: 0 20px 6px; }
+    .list-content { padding: 0 20px 12px; }
+
+    /* Players: compact for landscape */
+    .player-header { padding: 10px 24px; }
+    .player-neon .neon-cover { width: 200px; height: 200px; }
+    .player-premium .mag-cover { width: 200px; height: 200px; }
+    .player-vintage .vinyl { width: 200px; height: 200px; }
+    .player-auto .speedo { width: 240px; height: 240px; }
+    .player-sunset .sun-vinyl { width: 200px; height: 200px; }
+    .player-bauhaus .bh-composition { height: 80vh; max-height: 80vh; }
+    .player-bauhaus .bh-circle { width: 160px; height: 160px; }
+
+    .player-brutal .brutal-name { font-size: clamp(36px, 8vh, 70px); }
+    .player-brutal .brutal-bignum { font-size: 80vh; }
+  }
+
+  @media (max-width: 480px) {
+    .player-vintage { padding: 0 12px 30px; }
+    .player-vintage .radio-frame { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-controls">
+  <button class="top-btn" id="fullscreenBtn" title="Pantalla completa">
+    <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+  </button>
+  <button class="top-btn" id="themeBtn" title="Cambiar diseño">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+  </button>
+</div>
+
+<div class="theme-panel" id="themePanel">
+  <h3>8 diseños · cada uno único</h3>
+  <div class="theme-option" data-theme="neon"><div class="theme-swatch sw-neon"></div><div class="theme-meta"><div class="theme-name">Neón Cyberpunk</div><div class="theme-sub">HUD futurista · grid hexagonal</div></div></div>
+  <div class="theme-option" data-theme="premium"><div class="theme-swatch sw-premium"></div><div class="theme-meta"><div class="theme-name">Premium Editorial</div><div class="theme-sub">Revista de lujo</div></div></div>
+  <div class="theme-option" data-theme="vintage"><div class="theme-swatch sw-vintage"></div><div class="theme-meta"><div class="theme-name">Vintage Radio</div><div class="theme-sub">Radio analógica con dial y vinilo</div></div></div>
+  <div class="theme-option" data-theme="brutal"><div class="theme-swatch sw-brutal"></div><div class="theme-meta"><div class="theme-name">Brutalist Mono</div><div class="theme-sub">Poster con número gigante</div></div></div>
+  <div class="theme-option active" data-theme="auto"><div class="theme-swatch sw-auto"></div><div class="theme-meta"><div class="theme-name">Auto Dashboard</div><div class="theme-sub">Velocímetro circular</div></div></div>
+  <div class="theme-option" data-theme="sunset"><div class="theme-swatch sw-sunset"></div><div class="theme-meta"><div class="theme-name">Sunset Synthwave</div><div class="theme-sub">Vinilo + horizonte 80s</div></div></div>
+  <div class="theme-option" data-theme="terminal"><div class="theme-swatch sw-terminal"></div><div class="theme-meta"><div class="theme-name">Terminal Hacker</div><div class="theme-sub">CLI completa con ASCII</div></div></div>
+  <div class="theme-option" data-theme="bauhaus"><div class="theme-swatch sw-bauhaus"></div><div class="theme-meta"><div class="theme-name">Bauhaus</div><div class="theme-sub">Composición geométrica</div></div></div>
+</div>
+
+<div class="app theme-auto" id="app">
+
+  <!-- ============ LIST VIEW ============ -->
+  <div class="view view-list" id="viewList">
+    <div class="list-header">
+      <div class="list-brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 12c0-5 4-9 9-9s9 4 9 9M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6M9 12c0-1.7 1.3-3 3-3s3 1.3 3 3"/>
+            <circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="name">DANIVIA <em>RADIO</em></div>
+          <div class="sub">· World · Live ·</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-search-wrap">
+      <div class="list-search">
+        <svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar emisora, género, país...">
+      </div>
+    </div>
+
+    <div class="list-categories-wrap">
+      <div class="list-categories" id="categories"></div>
+    </div>
+
+    <div class="list-content">
+      <div class="section-title">
+        <h2 id="stationsTitle">Top Mundial</h2>
+        <span class="meta" id="stationsCount">CARGANDO</span>
+      </div>
+      <div class="stations" id="stations">
+        <div class="loading-state"><div class="spinner"></div><p>Cargando emisoras...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PLAYER VIEW ============ -->
+  <div class="view view-player" id="viewPlayer">
+
+    <!-- T1 NEON PLAYER -->
+    <div class="player-impl player-neon">
+      <div class="player-header">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title" style="font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;color:#00f0ff;">// NOW PLAYING //</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="hud-grid">
+        <div class="hud-cell">
+          <div class="hud-label">FREQ</div>
+          <div class="hud-value np-freq">102.5</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">SIGNAL</div>
+          <div class="hud-value np-bitrate">128k</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">COUNTRY</div>
+          <div class="hud-value np-country">—</div>
+        </div>
+        <div class="hud-cell">
+          <div class="hud-label">GENRE</div>
+          <div class="hud-value np-genre">—</div>
+        </div>
+      </div>
+
+      <div class="neon-cover-wrap">
+        <div class="cover-holder neon-cover" data-cover>
+          <span class="neon-corner tl"></span>
+          <span class="neon-corner tr"></span>
+          <span class="neon-corner bl"></span>
+          <span class="neon-corner br"></span>
+        </div>
+      </div>
+
+      <div class="neon-live">
+        <span class="live-dot"></span> ● LIVE TRANSMISSION
+      </div>
+      <div class="neon-title np-name">—</div>
+      <div class="neon-subtitle"><span class="country np-country">—</span> · TRANSMITTING</div>
+
+      <div class="viz viz-sync">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+
+      <div class="ctrls">
+        <button class="nctrl prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+        <button class="nctrl fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="nplay play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+        <button class="nctrl shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+        <button class="nctrl next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+      </div>
+    </div>
+
+    <!-- T2 PREMIUM PLAYER -->
+    <div class="player-impl player-premium">
+      <div class="player-header">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:#d4af37;">DANIVIA Magazine</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="mag-issue">VOL · <span class="accent np-bitrate">128</span> · KBPS · <span class="accent np-country">—</span> · <span class="accent">LIVE</span></div>
+
+      <div class="mag-cover-wrap">
+        <div class="cover-holder mag-cover" data-cover></div>
+      </div>
+
+      <h1 class="mag-headline">La <em class="np-name">emisora</em></h1>
+      <div class="mag-byline">desde <span class="country np-country">—</span></div>
+
+      <div class="mag-divider"><span>✦</span></div>
+
+      <div class="mag-live"><span class="live-dot"></span> EN VIVO ↁ <span class="np-genre">música</span></div>
+
+      <div class="viz viz-sync">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+
+      <div class="ctrls">
+        <button class="pctrl prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+        <button class="pctrl fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="pplay play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+        <button class="pctrl shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+        <button class="pctrl next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+      </div>
+    </div>
+
+    <!-- T3 VINTAGE PLAYER -->
+    <div class="player-impl player-vintage">
+      <div class="player-header">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title" style="font-family:'Playfair Display',serif;font-style:italic;font-size:14px;color:#c89c5a;">Reproduciendo</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="radio-frame">
+        <!-- Dial de frecuencia -->
+        <div class="dial">
+          <span class="dial-freq">98.7</span>
+          <div class="dial-marks"></div>
+          <span class="dial-needle"></span>
+          <span class="dial-band">FM</span>
+        </div>
+
+        <!-- Vinilo central -->
+        <div class="vinyl-wrap">
+          <div class="vinyl vinyl-sync">
+            <div class="cover-holder vinyl-label" data-cover></div>
+            <span class="vinyl-center"></span>
+          </div>
+        </div>
+
+        <!-- Título emisora -->
+        <div class="vntg-title np-name">—</div>
+        <div class="vntg-sub">— <span class="country np-country">—</span> —</div>
+
+        <!-- VU meter -->
+        <div class="vu-meter vu-sync">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+
+        <!-- Knobs (controls) -->
+        <div class="knobs">
+          <button class="knob prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+          <button class="knob fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          <button class="knob knob-play play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+          <button class="knob shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+          <button class="knob next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- T4 BRUTAL PLAYER -->
+    <div class="player-impl player-brutal">
+      <div class="brutal-bignum np-firstchar">A</div>
+      <div class="brutal-inner">
+        <div class="player-header">
+          <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+          <span class="player-header-title" style="color:#fff;font-family:'Archivo Black',sans-serif;font-size:12px;">PLAYING</span>
+          <div class="player-header-spacer"></div>
+        </div>
+
+        <div class="brutal-live"><span class="live-dot"></span> EN VIVO</div>
+        <h1 class="brutal-name np-name">SELECCIONA UNA EMISORA</h1>
+
+        <div class="brutal-info">
+          <div class="brutal-info-row">
+            <span class="label">COUNTRY</span>
+            <span class="value np-country">—</span>
+          </div>
+          <div class="brutal-info-row">
+            <span class="label">GENRE</span>
+            <span class="value np-genre">—</span>
+          </div>
+          <div class="brutal-info-row">
+            <span class="label">BITRATE</span>
+            <span class="value np-bitrate">— K</span>
+          </div>
+        </div>
+
+        <div class="viz viz-sync">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+
+        <div class="ctrls">
+          <button class="bctrl prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+          <button class="bctrl fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          <button class="bplay play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+          <button class="bctrl shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+          <button class="bctrl next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- T5 AUTO PLAYER -->
+    <div class="player-impl player-auto">
+      <div class="player-header">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title" style="color:#00d4ff;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;">EN REPRODUCCIÓN</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="hud-bar">
+        <div class="hud-tile">
+          <div class="hud-tile-label">PAÍS</div>
+          <div class="hud-tile-value np-country">—</div>
+        </div>
+        <div class="hud-tile">
+          <div class="hud-tile-label">GÉNERO</div>
+          <div class="hud-tile-value np-genre">—</div>
+        </div>
+        <div class="hud-tile">
+          <div class="hud-tile-label">SEÑAL</div>
+          <div class="hud-tile-value">●●●●●</div>
+        </div>
+      </div>
+
+      <div class="speedo-wrap">
+        <div class="speedo">
+          <div class="speedo-ticks"></div>
+          <div class="speedo-inner">
+            <div class="speedo-live"><span class="live-dot"></span>LIVE</div>
+            <div class="cover-holder speedo-cover" data-cover></div>
+            <div class="speedo-bitrate np-bitrate">128</div>
+            <div class="speedo-bitrate-label">KBPS</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auto-name np-name">—</div>
+      <div class="auto-sub">DANIVIA · RADIO · LIVE</div>
+
+      <div class="ctrls">
+        <button class="actrl prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+        <button class="actrl fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="aplay play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+        <button class="actrl shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+        <button class="actrl next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+      </div>
+    </div>
+
+    <!-- T6 SUNSET PLAYER -->
+    <div class="player-impl player-sunset">
+      <div class="sun-bg"></div>
+      <div class="sun-stripes"></div>
+
+      <div class="player-header" style="position:relative;z-index:3;">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title" style="color:#ffcc00;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:3px;text-transform:uppercase;">Spinning Now</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="sun-vinyl-wrap">
+        <div class="sun-vinyl vinyl-sync">
+          <div class="cover-holder sun-label" data-cover></div>
+        </div>
+      </div>
+
+      <div class="sun-info">
+        <div class="sun-live"><span class="live-dot"></span> EN VIVO</div>
+        <div class="sun-name np-name">—</div>
+        <div class="sun-sub"><span class="country np-country">—</span> · <span class="np-genre">—</span></div>
+      </div>
+
+      <div class="viz viz-sync">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+
+      <div class="ctrls">
+        <button class="sctrl prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+        <button class="sctrl fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="splay play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+        <button class="sctrl shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+        <button class="sctrl next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+      </div>
+    </div>
+
+    <!-- T7 TERMINAL PLAYER -->
+    <div class="player-impl player-terminal">
+      <div class="player-header">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title">danivia@radio:~$</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="term-window">
+        <div class="term-bar">
+          <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
+          <span class="term-title">~/now_playing.sh</span>
+        </div>
+
+        <div class="term-line"><span class="prompt">$</span> ./connect_stream</div>
+        <div class="term-line"><span class="label">[OK]</span> connection established</div>
+        <div class="term-line"><span class="label">station:</span> <span class="accent np-name">—</span></div>
+        <div class="term-line"><span class="label">country:</span> <span class="np-country">—</span></div>
+        <div class="term-line"><span class="label">genre:</span> <span class="np-genre">—</span></div>
+        <div class="term-line"><span class="label">bitrate:</span> <span class="accent np-bitrate">— kbps</span></div>
+        <div class="term-line"><span class="label">status:</span> <span style="color:#ff0040;">●</span> LIVE</div>
+
+        <div class="term-ascii">
+   ╔══════════════════════════╗
+   ║   ░▒▓ DANIVIA RADIO ▓▒░  ║
+   ╚══════════════════════════╝
+        </div>
+
+        <div class="term-bars-row term-bars-sync">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+
+        <div class="term-line term-cursor"><span class="prompt">$</span> </div>
+
+        <div class="term-cmds">
+          <button class="tcmd prev-trigger">prev_station</button>
+          <button class="tcmd next-trigger">next_station</button>
+          <button class="tcmd fav-trigger">add_favorite</button>
+          <button class="tcmd shuffle-trigger">shuffle_mode</button>
+          <button class="tcmd tcmd-play play-trigger"><span class="play-icon-text">play_stream</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- T8 BAUHAUS PLAYER -->
+    <div class="player-impl player-bauhaus">
+      <div class="player-header">
+        <button class="back-btn back-trigger"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <span class="player-header-title" style="color:#1a1a1a;font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:2px;">PLAYING</span>
+        <div class="player-header-spacer"></div>
+      </div>
+
+      <div class="bh-composition">
+        <div class="bh-square"></div>
+        <div class="bh-triangle"></div>
+        <div class="bh-line"></div>
+        <div class="cover-holder bh-circle" data-cover></div>
+      </div>
+
+      <h1 class="bh-name np-name">EMISORA</h1>
+
+      <div class="bh-info">
+        <span class="bh-info-tag red"><span class="live-dot" style="background:#fff;box-shadow:0 0 6px #fff;"></span> LIVE</span>
+        <span class="bh-info-tag yellow np-country">—</span>
+        <span class="bh-info-tag blue np-bitrate">— K</span>
+      </div>
+
+      <div class="viz viz-sync">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+
+      <div class="ctrls">
+        <button class="bctl prev-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="5" width="2" height="14"/></svg></button>
+        <button class="bctl fav-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+        <button class="bplay-bh play-trigger"><svg class="play-icon-sync" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+        <button class="bctl shuffle-trigger"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
+        <button class="bctl next-trigger"><svg viewBox="0 0 24 24" stroke="none" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="5" width="2" height="14"/></svg></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ TAB BAR ============ -->
+  <div class="tab-bar-wrap">
+    <div class="tab-bar">
+      <div class="tab active" data-tab="home"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Inicio</span></div>
+      <div class="tab" data-tab="search"><svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Buscar</span></div>
+      <div class="tab" data-tab="favorites"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Favoritas</span></div>
+      <div class="tab" data-tab="countries"><svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>España</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="error-banner" id="errorBanner">Stream no disponible</div>
+<audio id="audio" crossorigin="anonymous"></audio>
+
+<script>
+  const state = {
+    stations: [], currentStation: null, isPlaying: false,
+    favorites: JSON.parse(localStorage.getItem('danivia-favorites') || '[]'),
+    currentCategory: 'all', currentTab: 'home',
+    currentTheme: localStorage.getItem('danivia-theme') || 'auto',
+    apiServers: [
+      'https://de1.api.radio-browser.info/json',
+      'https://at1.api.radio-browser.info/json',
+      'https://fr1.api.radio-browser.info/json'
+    ]
+  };
+
+  const CATEGORIES = [
+    { id: 'all', label: 'Top Mundial', tag: null },
+    { id: 'spain', label: 'España', country: 'Spain' },
+    { id: 'pop', label: 'Pop', tag: 'pop' },
+    { id: 'rock', label: 'Rock', tag: 'rock' },
+    { id: 'latin', label: 'Latina', tag: 'latin' },
+    { id: 'reggaeton', label: 'Reggaetón', tag: 'reggaeton' },
+    { id: 'electronic', label: 'Electrónica', tag: 'electronic' },
+    { id: 'dance', label: 'Dance', tag: 'dance' },
+    { id: 'jazz', label: 'Jazz', tag: 'jazz' },
+    { id: 'classical', label: 'Clásica', tag: 'classical' },
+    { id: 'news', label: 'Noticias', tag: 'news' },
+    { id: 'sport', label: 'Deportes', tag: 'sport' },
+    { id: 'chillout', label: 'Chillout', tag: 'chillout' },
+    { id: 'hiphop', label: 'Hip Hop', tag: 'hip-hop' },
+    { id: 'reggae', label: 'Reggae', tag: 'reggae' },
+    { id: 'metal', label: 'Metal', tag: 'metal' },
+    { id: 'indie', label: 'Indie', tag: 'indie' },
+    { id: '80s', label: 'Años 80', tag: '80s' },
+    { id: '90s', label: 'Años 90', tag: '90s' }
+  ];
+
+  const $ = id => document.getElementById(id);
+  const audio = $('audio');
+
+  // === LOGO ===
+  const failedUrls = new Set();
+  function getDomain(url) {
+    if (!url) return null;
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return null; }
+  }
+  function createLogoElement(station, initials) {
+    const wrapper = document.createElement('span');
+    wrapper.style.width = '100%'; wrapper.style.height = '100%';
+    wrapper.style.display = 'flex'; wrapper.style.alignItems = 'center'; wrapper.style.justifyContent = 'center';
+    const domain = getDomain(station.homepage);
+    const candidates = [];
+    if (station.favicon && !failedUrls.has(station.favicon)) candidates.push(station.favicon);
+    if (domain) {
+      const clearbit = `https://logo.clearbit.com/${domain}`;
+      const ddg = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+      if (!failedUrls.has(clearbit)) candidates.push(clearbit);
+      if (!failedUrls.has(ddg)) candidates.push(ddg);
+    }
+    if (candidates.length === 0) {
+      const s = document.createElement('span'); s.className = 'logo-initials'; s.textContent = initials;
+      wrapper.appendChild(s); return wrapper;
+    }
+    let idx = 0;
+    const img = document.createElement('img');
+    img.className = 'logo-img'; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+    img.onerror = () => {
+      failedUrls.add(img.src); idx++;
+      if (idx < candidates.length) img.src = candidates[idx];
+      else {
+        const s = document.createElement('span'); s.className = 'logo-initials'; s.textContent = initials;
+        wrapper.innerHTML = ''; wrapper.appendChild(s);
+      }
+    };
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalWidth < 24 && idx < candidates.length - 1) {
+        failedUrls.add(img.src); idx++; img.src = candidates[idx];
+      }
+    };
+    img.src = candidates[0];
+    wrapper.appendChild(img);
+    return wrapper;
+  }
+
+  // === THEME ===
+  function applyTheme(theme) {
+    $('app').className = 'app theme-' + theme;
+    state.currentTheme = theme;
+    localStorage.setItem('danivia-theme', theme);
+    document.querySelectorAll('.theme-option').forEach(o => o.classList.toggle('active', o.dataset.theme === theme));
+  }
+  $('themeBtn').addEventListener('click', (e) => { e.stopPropagation(); $('themePanel').classList.toggle('open'); });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#themePanel') && !e.target.closest('#themeBtn')) $('themePanel').classList.remove('open');
+  });
+  document.querySelectorAll('.theme-option').forEach(opt => {
+    opt.addEventListener('click', () => { applyTheme(opt.dataset.theme); $('themePanel').classList.remove('open'); });
+  });
+
+  $('fullscreenBtn').addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+  });
+
+  // === VIEWS ===
+  function showPlayer() {
+    $('viewList').classList.add('hidden');
+    $('viewPlayer').classList.add('active');
+    document.querySelector('.tab-bar-wrap').style.display = 'none';
+    document.body.classList.add('on-player');
+    window.scrollTo(0, 0);
+  }
+  function showList() {
+    $('viewList').classList.remove('hidden');
+    $('viewPlayer').classList.remove('active');
+    document.querySelector('.tab-bar-wrap').style.display = 'block';
+    document.body.classList.remove('on-player');
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('.back-trigger').forEach(b => b.addEventListener('click', showList));
+
+  // === API ===
+  async function apiFetch(path) {
+    let lastErr = null;
+    for (const server of state.apiServers) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(server + path, { method: 'GET', signal: controller.signal, headers: { 'Accept': 'application/json' } });
+        clearTimeout(timeoutId);
+        if (res.ok) return await res.json();
+        lastErr = new Error('Status ' + res.status);
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr || new Error('All failed');
+  }
+
+  async function fetchStations(opts = {}) {
+    const { country, tag, search, limit = 60 } = opts;
+    let path;
+    if (search) path = `/stations/search?name=${encodeURIComponent(search)}&limit=${limit}&order=clickcount&reverse=true&hidebroken=true`;
+    else if (country) path = `/stations/bycountry/${encodeURIComponent(country)}?limit=${limit}&order=clickcount&reverse=true&hidebroken=true`;
+    else if (tag) path = `/stations/bytag/${encodeURIComponent(tag)}?limit=${limit}&order=clickcount&reverse=true&hidebroken=true`;
+    else path = `/stations/topclick/${limit}`;
+    try {
+      const data = await apiFetch(path);
+      return data.filter(s => s.url_resolved && s.name && s.lastcheckok === 1 && s.bitrate > 0);
+    } catch (e) {
+      showError('No se pudo conectar. ¿Tienes internet?');
+      return [];
+    }
+  }
+
+  function renderCategories() {
+    $('categories').innerHTML = CATEGORIES.map(c =>
+      `<div class="cat-pill ${c.id === state.currentCategory ? 'active' : ''}" data-cat="${c.id}">${c.label}</div>`
+    ).join('');
+    document.querySelectorAll('.cat-pill').forEach(p => p.addEventListener('click', () => selectCategory(p.dataset.cat)));
+  }
+
+  async function selectCategory(catId) {
+    state.currentCategory = catId;
+    const cat = CATEGORIES.find(c => c.id === catId);
+    renderCategories();
+    $('stationsTitle').textContent = cat.label;
+    showLoading();
+    const stations = await fetchStations({ country: cat.country, tag: cat.tag, limit: 60 });
+    state.stations = stations;
+    renderStations(stations);
+  }
+
+  function showLoading() {
+    $('stations').innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Cargando emisoras...</p></div>`;
+    $('stationsCount').textContent = 'CARGANDO';
+  }
+  function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+  function renderStations(stations) {
+    const container = $('stations');
+    if (!stations.length) {
+      container.innerHTML = `<div class="empty-state"><p>No hay emisoras</p><button id="retryBtn" style="margin-top:16px;padding:10px 20px;cursor:pointer;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:inherit;border-radius:8px;font-family:inherit;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Reintentar</button></div>`;
+      $('stationsCount').textContent = '0 EMISORAS';
+      const r = document.getElementById('retryBtn'); if (r) r.addEventListener('click', () => selectCategory(state.currentCategory));
+      return;
+    }
+    $('stationsCount').textContent = stations.length + ' EMISORAS';
+    container.innerHTML = '';
+    stations.forEach((s, i) => {
+      const isFav = state.favorites.some(f => f.stationuuid === s.stationuuid);
+      const initials = s.name.trim().substring(0, 2).toUpperCase();
+      const row = document.createElement('div');
+      row.className = 'station';
+      row.dataset.idx = i;
+
+      const art = document.createElement('div');
+      art.className = 'station-art';
+      art.appendChild(createLogoElement(s, initials));
+
+      const info = document.createElement('div');
+      info.className = 'station-info';
+      const name = document.createElement('div');
+      name.className = 'station-name'; name.textContent = s.name.trim();
+      const meta = document.createElement('div');
+      meta.className = 'station-meta';
+      const genre = (s.tags || '').split(',')[0].trim();
+      meta.innerHTML = `${genre ? `<span>${escapeHtml(genre)}</span><span class="dot"></span>` : ''}<span>${escapeHtml(s.country || 'Mundo')}</span>${s.bitrate ? `<span class="dot"></span><span>${s.bitrate}k</span>` : ''}`;
+      info.appendChild(name); info.appendChild(meta);
+
+      const fav = document.createElement('div');
+      fav.className = 'favorite-star' + (isFav ? ' active' : '');
+      fav.innerHTML = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      fav.addEventListener('click', (e) => { e.stopPropagation(); toggleFavorite(state.stations[i]); });
+
+      row.appendChild(art); row.appendChild(info); row.appendChild(fav);
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.favorite-star')) return;
+        playStation(state.stations[i]);
+        showPlayer();
+      });
+      container.appendChild(row);
+    });
+  }
+
+  // === PLAYER UPDATES (across ALL player implementations) ===
+  function updatePlayerUI(station) {
+    // Update all elements with these classes across all 8 players
+    document.querySelectorAll('.np-name').forEach(el => el.textContent = station.name.trim());
+    document.querySelectorAll('.np-country').forEach(el => el.textContent = station.country || 'Mundo');
+    document.querySelectorAll('.np-genre').forEach(el => el.textContent = (station.tags || '').split(',')[0].trim() || 'música');
+    document.querySelectorAll('.np-bitrate').forEach(el => {
+      // For neon HUD just show kbps with k suffix; for terminal show "kbps", for brutal show "K"
+      const txt = el.textContent;
+      const br = station.bitrate || '—';
+      if (txt.toLowerCase().includes('kbps')) el.textContent = br + ' kbps';
+      else if (txt.toLowerCase().includes('k')) el.textContent = br + ' K';
+      else el.textContent = br;
+    });
+    document.querySelectorAll('.np-firstchar').forEach(el => el.textContent = (station.name.charAt(0) || 'A').toUpperCase());
+    document.querySelectorAll('.np-freq').forEach(el => {
+      // Generate "frequency-like" number based on bitrate
+      el.textContent = (station.bitrate ? (88 + (station.bitrate % 20) + 0.5).toFixed(1) : '102.5');
+    });
+
+    // Update all covers
+    document.querySelectorAll('[data-cover]').forEach(el => {
+      el.innerHTML = '';
+      // Preserve corners in neon
+      if (el.classList.contains('neon-cover')) {
+        ['tl','tr','bl','br'].forEach(c => {
+          const corner = document.createElement('span');
+          corner.className = 'neon-corner ' + c;
+          el.appendChild(corner);
+        });
+      }
+      el.appendChild(createLogoElement(station, station.name.charAt(0).toUpperCase()));
+    });
+  }
+
+  function playStation(station) {
+    if (!station) return;
+    state.currentStation = station;
+    updatePlayerUI(station);
+
+    fetch(`${state.apiServers[0]}/url/${station.stationuuid}`).catch(()=>{});
+
+    audio.src = station.url_resolved;
+    document.querySelectorAll('.play-trigger').forEach(b => b.classList.add('loading'));
+    audio.play().then(() => {
+      state.isPlaying = true;
+      updatePlayButtons();
+      document.querySelectorAll('.viz-sync, .vu-sync, .term-bars-sync').forEach(v => v.classList.add('playing'));
+      document.querySelectorAll('.vinyl-sync').forEach(v => v.classList.add('spinning'));
+    }).catch(() => {
+      showError('Esta emisora no responde');
+      document.querySelectorAll('.play-trigger').forEach(b => b.classList.remove('loading'));
+    });
+  }
+
+  function togglePlay() {
+    if (!state.currentStation) return;
+    if (state.isPlaying) {
+      audio.pause(); state.isPlaying = false;
+      document.querySelectorAll('.viz-sync, .vu-sync, .term-bars-sync').forEach(v => v.classList.remove('playing'));
+      document.querySelectorAll('.vinyl-sync').forEach(v => v.classList.remove('spinning'));
+    } else {
+      audio.play(); state.isPlaying = true;
+      document.querySelectorAll('.viz-sync, .vu-sync, .term-bars-sync').forEach(v => v.classList.add('playing'));
+      document.querySelectorAll('.vinyl-sync').forEach(v => v.classList.add('spinning'));
+    }
+    updatePlayButtons();
+  }
+
+  function updatePlayButtons() {
+    document.querySelectorAll('.play-trigger').forEach(b => b.classList.remove('loading'));
+    document.querySelectorAll('.play-icon-sync').forEach(svg => {
+      svg.innerHTML = state.isPlaying
+        ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+        : '<polygon points="6 4 20 12 6 20 6 4"/>';
+    });
+    document.querySelectorAll('.play-icon-text').forEach(el => {
+      el.textContent = state.isPlaying ? 'pause_stream' : 'play_stream';
+    });
+  }
+
+  function playNext() {
+    if (!state.stations.length) return;
+    const idx = state.currentStation ? state.stations.findIndex(s => s.stationuuid === state.currentStation.stationuuid) : -1;
+    playStation(state.stations[(idx + 1) % state.stations.length]);
+  }
+  function playPrev() {
+    if (!state.stations.length) return;
+    const idx = state.currentStation ? state.stations.findIndex(s => s.stationuuid === state.currentStation.stationuuid) : 0;
+    playStation(state.stations[(idx - 1 + state.stations.length) % state.stations.length]);
+  }
+  function playShuffle() {
+    if (!state.stations.length) return;
+    playStation(state.stations[Math.floor(Math.random() * state.stations.length)]);
+  }
+  function toggleFavorite(station) {
+    if (!station) return;
+    const idx = state.favorites.findIndex(f => f.stationuuid === station.stationuuid);
+    if (idx >= 0) state.favorites.splice(idx, 1);
+    else state.favorites.push(station);
+    localStorage.setItem('danivia-favorites', JSON.stringify(state.favorites));
+    renderStations(state.stations);
+  }
+
+  // Wire all triggers (multiple buttons per action across players)
+  document.querySelectorAll('.play-trigger').forEach(b => b.addEventListener('click', togglePlay));
+  document.querySelectorAll('.next-trigger').forEach(b => b.addEventListener('click', playNext));
+  document.querySelectorAll('.prev-trigger').forEach(b => b.addEventListener('click', playPrev));
+  document.querySelectorAll('.shuffle-trigger').forEach(b => b.addEventListener('click', playShuffle));
+  document.querySelectorAll('.fav-trigger').forEach(b => b.addEventListener('click', () => { if (state.currentStation) toggleFavorite(state.currentStation); }));
+
+  // === SEARCH ===
+  let searchTimer;
+  $('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    const val = e.target.value.trim();
+    if (!val) { selectCategory(state.currentCategory); return; }
+    searchTimer = setTimeout(async () => {
+      showLoading();
+      $('stationsTitle').textContent = 'Resultados: ' + val;
+      const results = await fetchStations({ search: val, limit: 60 });
+      state.stations = results;
+      renderStations(results);
+    }, 400);
+  });
+
+  // === TABS ===
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const t = tab.dataset.tab;
+      if (t === 'favorites') {
+        $('stationsTitle').textContent = 'Favoritas';
+        state.stations = state.favorites;
+        renderStations(state.favorites);
+        $('stationsCount').textContent = state.favorites.length + ' EMISORAS';
+      } else if (t === 'search') {
+        $('searchInput').focus();
+      } else if (t === 'countries') {
+        $('stationsTitle').textContent = 'España';
+        showLoading();
+        fetchStations({ country: 'Spain', limit: 60 }).then(s => { state.stations = s; renderStations(s); });
+      } else {
+        selectCategory(state.currentCategory);
+      }
+    });
+  });
+
+  // === AUDIO ERRORS ===
+  let errorCount = 0;
+  audio.addEventListener('error', () => {
+    if (state.currentStation && errorCount < 3) {
+      errorCount++;
+      showError('Stream caído, saltando...');
+      setTimeout(playNext, 800);
+    } else {
+      showError('Varias emisoras caídas');
+      errorCount = 0;
+    }
+    state.isPlaying = false;
+    updatePlayButtons();
+  });
+  audio.addEventListener('playing', () => {
+    document.querySelectorAll('.play-trigger').forEach(b => b.classList.remove('loading'));
+    errorCount = 0;
+  });
+
+  function showError(msg) {
+    const b = $('errorBanner');
+    b.textContent = msg;
+    b.classList.add('show');
+    setTimeout(() => b.classList.remove('show'), 3000);
+  }
+
+  // === INIT ===
+  applyTheme(state.currentTheme);
+  renderCategories();
+  selectCategory('all');
+</script>
+</body>
+</html>
